@@ -11,11 +11,21 @@ package org.openPyro.plugins.airHelpers
 	import flash.utils.ByteArray;
 	import flash.filesystem.*;
 	
+	/**
+	* 	Dispatched if there was any error during the download process.
+	*/
+	[Event(name="downloadError", type="flash.events.Event")]
+	
+	/**
+	* 	Dispatched once the download is complete
+	*/
+	[Event(name="downloadComplete", type="flash.events.Event")]
+	
 	public class RemoteFileDownloader extends EventDispatcher
 	{
 		
-		public static const DOWNLOAD_COMPLETE:String = "downloadComplete"
-		public static const DOWNLOAD_ERROR:String = "downloadComplete"
+		public static const DOWNLOAD_COMPLETE:String = "downloadComplete";
+		public static const DOWNLOAD_ERROR:String = "downloadError";
 		
 		private var fileURLRequest:URLRequest
 		private var downloadedFile:File;
@@ -45,6 +55,7 @@ package org.openPyro.plugins.airHelpers
 			try{			
 				fileStream.open(downloadedFile, FileMode.WRITE);
 			}catch(e:Error){
+				dispatchEvent(new Event(DOWNLOAD_ERROR));
 				return;
 			}
 		}
