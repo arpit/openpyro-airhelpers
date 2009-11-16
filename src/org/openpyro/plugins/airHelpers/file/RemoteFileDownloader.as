@@ -1,4 +1,4 @@
-package org.openPyro.plugins.airHelpers
+package org.openPyro.plugins.airHelpers.file
 {
 	import flash.errors.EOFError;
 	import flash.errors.IOError;
