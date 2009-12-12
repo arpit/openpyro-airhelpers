@@ -21,7 +21,7 @@ package org.openpyro.plugins.airHelpers.storage
 		override public function read():*{
 			var storedValue:ByteArray = EncryptedLocalStore.getItem(_fileName);
 			_data = storedValue.readUTFBytes(storedValue.length);
-			
+			return _data;
 		}
 	}
 }

@@ -27,8 +27,9 @@ package org.openpyro.plugins.airHelpers.storage
 		{
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(_file, FileMode.READ);
-			fileStream.readUTFBytes(fileStream.bytesAvailable)
-			fileStream.close()
+			_data = fileStream.readUTFBytes(fileStream.bytesAvailable)
+			fileStream.close();
+			return _data;
 		}
 	}
 }
