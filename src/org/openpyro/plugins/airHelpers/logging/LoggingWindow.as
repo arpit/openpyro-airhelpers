@@ -67,7 +67,7 @@ package org.openpyro.plugins.airHelpers.logging
 				var a:Array =  getQualifiedClassName(source).split("::");
 				source = a[a.length-1]
 			}
-			var s:String = "<font color='"+getColorForLevel(level)+"'>[ "+source+" ] [ "+ Level.getLevelString(level) +" ] "+msg+"</font>";
+			var s:String = "<font face='Arial' color='"+getColorForLevel(level)+"'>[ "+source+" ] [ "+ Level.getLevelString(level) +" ] "+msg+"</font>";
 			
 			logs.push(s);
 			if(ui){
@@ -103,16 +103,20 @@ import org.openPyro.controls.ScrollBar;
 import org.openPyro.core.Direction;
 import org.openPyro.aurora.AuroraScrollBarSkin;
 import org.openPyro.controls.events.ScrollEvent;
+import org.openPyro.controls.Label;
+import flash.events.MouseEvent;
+import flash.system.System;
+import org.openPyro.aurora.AuroraContainerSkin;
+import flash.text.TextFieldType;
 
 class LoggingWindowUI extends UIContainer{
-	private var text:TextField;
+	
 	private var _logs:Vector.<String>;
-	private var txt:Text;
 	
 	private var searchField:TextInput;
-	private var scrollbar:ScrollBar;
-	
-	private var textBox:UIContainer;
+	//private var scrollbar:ScrollBar;
+	private var copyLabel:Label;
+	private var textBox:TextArea;
 	
 	override protected function createChildren():void{
 		this.layout = new VLayout();
@@ -133,41 +137,28 @@ class LoggingWindowUI extends UIContainer{
 		header.addChild(searchField);
 		
 		
-		textBox = new UIContainer();
+		textBox = new TextArea();
+		textBox.size("100%","100%");
 		addChild(textBox);
 		
-		var fmt:TextFormat = new TextFormat("Arial", 12);
-		fmt.leading = 4;
+		copyLabel = new Label();
+		copyLabel.size(130,25);
+		copyLabel.text = "Copy to clipboard";
+		var tf:TextFormat = new TextFormat("Arial",12, 0x444444);
+		tf.align = "right";
+		copyLabel.textFormat = tf
+		copyLabel.buttonMode = true;
+		copyLabel.useHandCursor = true;
 		
-		text = new TextField();
-		text.defaultTextFormat = fmt; 
-		text.autoSize = "left";
-		text.wordWrap = true;
-		text.multiline = true;
-		textBox.addChild(text);
-		
-		
-		scrollbar = new ScrollBar(Direction.VERTICAL);
-		scrollbar.includeInLayout = false;	
-		var auroraScrollBarSkin:AuroraScrollBarSkin = new AuroraScrollBarSkin();
-		
-		auroraScrollBarSkin.direction = Direction.VERTICAL;
-		
-		scrollbar.skin = auroraScrollBarSkin;
-		scrollbar.width  = 15;
-		
-		addChild(scrollbar);
-		scrollbar.addEventListener(ScrollEvent.SCROLL, scrollbarScroll);
-		
+		copyLabel.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{
+			System.setClipboard(textBox.htmlText);
+			copyLabel.text = "Copied..."
+		});
+		addChild(copyLabel);
 		
 		if(_logs){
-			text.htmlText = _logs.join("\n");
+			textBox.htmlText = _logs.join("\n");
 		}
-	}
-	
-	private function scrollbarScroll(event:ScrollEvent):void{
-		var scrollHeight:Number = Math.max(0, text.height-(height-35));
-		text.y = -scrollbar.value*scrollHeight/100;
 	}
 	
 	private function doFilter(event:Event):void{
@@ -177,36 +168,107 @@ class LoggingWindowUI extends UIContainer{
 				s.push(_logs[i])
 			}
 		}
-		text.htmlText = s.join("\n");
+		textBox.htmlText = s.join("\n");
 	}
 	
 	override public function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
 		super.updateDisplayList(unscaledWidth, unscaledHeight);
-		scrollbar.x = unscaledWidth-scrollbar.width -10;
+		//scrollbar.x = unscaledWidth-scrollbar.width -10;
 		searchField.y = 5;
-		text.width = unscaledWidth;
-		text.height = unscaledHeight-35;
-		textBox.width = unscaledWidth;
-		textBox.height  = unscaledHeight-35;
-		scrollbar.height = unscaledHeight-45;
-		scrollbar.y = 35;
 		textBox.y = 35;
+		copyLabel.y = 5;
+		copyLabel.x = unscaledWidth - copyLabel.width-5;
 	}
 	
 	public function set logs(l:Vector.<String>):void{
+		if(copyLabel){
+			copyLabel.text = "Copy to clipboard";
+		}
 		_logs = l;
-		if(text){// && txt.textField){
-			text.text = _logs.join("\n");
+		if(textBox){// && txt.textField){
+			textBox.htmlText = _logs.join("\n");
 		}
 	}
 	
 	public function addLog(s:String):void{
-		if(!text) return;
+		if(copyLabel){
+			copyLabel.text = "Copy to clipboard";
+		}
 		if(searchField && searchField.text != ""){
 			if(s.toLowerCase().indexOf(searchField.text.toLowerCase()) == -1){
 				return;
 			}
 		}
-		text.htmlText+=(s+"\n");	
+		textBox.htmlText+=(s+"\n");	
 	}
+}
+
+class TextArea extends UIContainer{
+	private var _textField:TextField;
+	
+	override protected function createChildren():void{
+		super.createChildren();
+		
+		this.backgroundPainter = new FillPainter(0xffffff);
+		this.addEventListener(MouseEvent.CLICK, onClick);
+		
+		
+		_textField = new TextField();
+		_textField.width = 0;
+		_textField.type = TextFieldType.DYNAMIC;
+		//_textField.border = true;
+		_textField.multiline = true;
+		_textField.wordWrap = true;
+		_textField.autoSize = "left";
+		_textField.defaultTextFormat = new TextFormat("Arial",15)
+		_textField.addEventListener(Event.CHANGE, onTxtChange)
+		
+		addChild(_textField);
+		this.skin = new AuroraContainerSkin();
+	}
+	
+	
+	private function onClick(event:Event):void{
+		stage.focus = _textField;
+	}
+	
+	public function set text(t:String):void{
+		if(_textField){
+			_textField.text = t;
+		}
+	}
+	
+	public function set htmlText(t:String):void{
+		
+		if(_textField){
+			dispatchEvent(new PyroEvent(PyroEvent.SIZE_INVALIDATED))
+			_textField.htmlText = t;
+		}
+	}
+	
+	public function get htmlText():String{
+		if(_textField){
+			return _textField.htmlText;
+		}
+		return "";
+	}
+	
+	
+	private function onTxtChange(event:Event):void{
+		dispatchEvent(new PyroEvent(PyroEvent.SIZE_INVALIDATED))
+	}
+	
+	override public function calculateContentDimensions():void{
+		super.calculateContentDimensions();
+		_contentHeight = this._textField.height;
+	}
+	
+	override public function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+		super.updateDisplayList(unscaledWidth, unscaledHeight);
+		if(_textField.width == 0){
+			_textField.width = unscaledWidth-25;
+		}
+		
+	}
+	
 }
