@@ -99,6 +99,10 @@ import org.openPyro.layout.VLayout;
 import org.openPyro.core.Padding;
 import org.openPyro.events.PyroEvent;
 import flash.events.Event;
+import org.openPyro.controls.ScrollBar;
+import org.openPyro.core.Direction;
+import org.openPyro.aurora.AuroraScrollBarSkin;
+import org.openPyro.controls.events.ScrollEvent;
 
 class LoggingWindowUI extends UIContainer{
 	private var text:TextField;
@@ -106,11 +110,11 @@ class LoggingWindowUI extends UIContainer{
 	private var txt:Text;
 	
 	private var searchField:TextInput;
+	private var scrollbar:ScrollBar;
+	
+	private var textBox:UIContainer;
 	
 	override protected function createChildren():void{
-		//text = new TextField;
-		
-		
 		this.layout = new VLayout();
 		
 		var header:UIControl = new UIControl();
@@ -129,6 +133,9 @@ class LoggingWindowUI extends UIContainer{
 		header.addChild(searchField);
 		
 		
+		textBox = new UIContainer();
+		addChild(textBox);
+		
 		var fmt:TextFormat = new TextFormat("Arial", 12);
 		fmt.leading = 4;
 		
@@ -137,16 +144,30 @@ class LoggingWindowUI extends UIContainer{
 		text.autoSize = "left";
 		text.wordWrap = true;
 		text.multiline = true;
-		addChild(text);
+		textBox.addChild(text);
 		
-		//txt = new Text();
-		//txt.size("100%","100%");
-		//txt.textFormat = fmt;
-		//addChild(txt);
+		
+		scrollbar = new ScrollBar(Direction.VERTICAL);
+		scrollbar.includeInLayout = false;	
+		var auroraScrollBarSkin:AuroraScrollBarSkin = new AuroraScrollBarSkin();
+		
+		auroraScrollBarSkin.direction = Direction.VERTICAL;
+		
+		scrollbar.skin = auroraScrollBarSkin;
+		scrollbar.width  = 15;
+		
+		addChild(scrollbar);
+		scrollbar.addEventListener(ScrollEvent.SCROLL, scrollbarScroll);
+		
 		
 		if(_logs){
 			text.htmlText = _logs.join("\n");
 		}
+	}
+	
+	private function scrollbarScroll(event:ScrollEvent):void{
+		var scrollHeight:Number = Math.max(0, text.height-(height-35));
+		text.y = -scrollbar.value*scrollHeight/100;
 	}
 	
 	private function doFilter(event:Event):void{
@@ -161,10 +182,15 @@ class LoggingWindowUI extends UIContainer{
 	
 	override public function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
 		super.updateDisplayList(unscaledWidth, unscaledHeight);
+		scrollbar.x = unscaledWidth-scrollbar.width -10;
 		searchField.y = 5;
 		text.width = unscaledWidth;
 		text.height = unscaledHeight-35;
-		text.y = 32;
+		textBox.width = unscaledWidth;
+		textBox.height  = unscaledHeight-35;
+		scrollbar.height = unscaledHeight-45;
+		scrollbar.y = 35;
+		textBox.y = 35;
 	}
 	
 	public function set logs(l:Vector.<String>):void{
@@ -181,6 +207,6 @@ class LoggingWindowUI extends UIContainer{
 				return;
 			}
 		}
-		text.htmlText+=(s+"\n");
+		text.htmlText+=(s+"\n");	
 	}
 }

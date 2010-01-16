@@ -1,6 +1,8 @@
 package org.openpyro.plugins.airHelpers.storage
 {
-	public class AbstractFile
+	import flash.events.EventDispatcher;
+	
+	public class AbstractFile extends EventDispatcher
 	{
 		public function AbstractFile()
 		{

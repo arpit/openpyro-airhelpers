@@ -18,7 +18,14 @@ package org.openpyro.plugins.airHelpers.storage
 		public function write():void
 		{
 			var fileStream:FileStream = new FileStream();
-			fileStream.open(_file, FileMode.WRITE);
+			try{
+				fileStream.open(_file, FileMode.WRITE);
+			}catch(e:Error){
+				var err:StorageEvent = new StorageEvent(StorageEvent.STORAGE_ERROR);
+				err.error = e;
+				dispatchEvent(err); 
+				return;
+			}
 			fileStream.writeUTFBytes(_data);
 			fileStream.close()
 		}
