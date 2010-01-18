@@ -1,9 +1,9 @@
 package org.openpyro.plugins.airHelpers.utils
 {
 	import flash.desktop.DockIcon;
-	import flash.desktop.InteractiveIcon;
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemTrayIcon;
+	import flash.display.NativeMenu;
 	import flash.display.NativeWindow;
 	import flash.events.Event;
 	import flash.events.InvokeEvent;
@@ -33,37 +33,52 @@ package org.openpyro.plugins.airHelpers.utils
 		 *  
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
-		 public static function makeMinimizableOnClose(win:NativeWindow, dockedIconBitmaps:Array, undockEventListener:Function=null,  menuGenerator:Function=null):void{
+		 public static function makeMinimizableOnClose(win:NativeWindow, dockedIconBitmaps:Array, undockEventListener:Function=null,  menu:NativeMenu=null):void{
+		 	
 		 	var undockELWrapper:Function = function(event:Event):void{
 		 		if(undockEventListener != null){
 		 			var showWindow:Boolean = undockEventListener(event);
 		 			if(!showWindow){
 		 				return;
 		 			}
-		 			NativeApplication.nativeApplication.icon.bitmaps = [];
-		 			win.activate();
-		 		}	
+		 		}
+		 		NativeApplication.nativeApplication.icon.bitmaps = [];
+		 		win.visible = true;	
 		 	};
+		 	
+		 	var isExiting:Boolean = false;
+		 	
+		 	var na:NativeApplication = NativeApplication.nativeApplication;
+		 	na.autoExit = false;
+		 	na.addEventListener(InvokeEvent.INVOKE, undockELWrapper);
+		 	na.addEventListener(Event.EXITING, function(event:Event):void{
+		 		isExiting = true;
+		 	})
+		 	//pass an empty callback for callback function since adding it at event.close seems to
+		 	//dispatch the INVOKE event anyway.
 		 	win.addEventListener(Event.CLOSING, function(event:Event):void{
-		 		event.stopImmediatePropagation();
+		 		if(isExiting){
+		 			// do default exit
+		 			return;
+		 		}
+		 		// else: this is a window close action
 		 		event.preventDefault();
-		 		win.visible = false;
-		 		showInDockOrSystemTray(dockedIconBitmaps, undockELWrapper, win.title, menuGenerator);
+		 		win.visible=false;
+		 		showInDockOrSystemTray(dockedIconBitmaps, function(event:Event):void{}, win.title, menu);
 		 	});
 		 }
 		 
 		 /**
 		 * Shows one of the Bitmaps in the dockedIconBitmaps Array in the OS Dock or System Tray
+		 * and calls the undockListener an event when the icon in the dock is clicked on on either OS. 
 		 */ 
-		 public static function showInDockOrSystemTray(dockedIconBitmaps:Array, undockEventListener:Function, tooltip:String, menuGenerator:Function = null):void{
+		 public static function showInDockOrSystemTray(dockedIconBitmaps:Array, undockEventListener:Function, tooltip:String, menu:NativeMenu=null):void{
 		 	if(NativeApplication.supportsDockIcon){
 			    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
 			    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
-			    if(menuGenerator != null){
-				 	dockIcon.addEventListener(MouseEvent.RIGHT_CLICK, function(event:MouseEvent):void{
-				 		dockIcon.menu = menuGenerator();
-				 	});
-				}	
+			    if(menu){
+			    	dockIcon.menu = menu;
+			    }
 			} else if (NativeApplication.supportsSystemTrayIcon){
 				
 			    var sysTrayIcon:SystemTrayIcon =
@@ -71,10 +86,8 @@ package org.openpyro.plugins.airHelpers.utils
 			    sysTrayIcon.tooltip = tooltip;
 			    sysTrayIcon.addEventListener(MouseEvent.CLICK,undockEventListener);
 			   	NativeApplication.nativeApplication.icon.bitmaps = dockedIconBitmaps;
-			   	if(menuGenerator != null){
-				 	sysTrayIcon.addEventListener(MouseEvent.RIGHT_CLICK, function(event:MouseEvent):void{
-				 		sysTrayIcon.menu = menuGenerator();
-				 	});
+			   	if(menu != null){
+				 	sysTrayIcon.menu = menu;
 				}	
 			}	
 		}
