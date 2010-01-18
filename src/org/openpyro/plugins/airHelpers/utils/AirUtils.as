@@ -8,10 +8,13 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.display.NativeMenu;
 	import flash.display.NativeWindow;
 	import flash.events.Event;
+	import flash.events.IOErrorEvent;
 	import flash.events.InvokeEvent;
 	import flash.events.MouseEvent;
 	import flash.filesystem.File;
 	import flash.net.URLRequest;
+	import flash.system.ApplicationDomain;
+	import flash.system.LoaderContext;
 	
 	public class AirUtils
 	{
@@ -143,7 +146,11 @@ package org.openpyro.plugins.airHelpers.utils
 	 					callback(loaders);
 	 				}
 	 			})
-	 			loader.load(new URLRequest(File.applicationDirectory.resolvePath(iconPath).nativePath));
+	 			
+	 			loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void{
+	 				trace("Error loading local image")	
+	 			})
+	 			loader.load(new URLRequest(File.applicationDirectory.resolvePath(iconPath).url));
 	 		}
 		}
 	}
