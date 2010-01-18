@@ -3,11 +3,14 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.desktop.DockIcon;
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemTrayIcon;
+	import flash.display.Loader;
 	import flash.display.NativeMenu;
 	import flash.display.NativeWindow;
 	import flash.events.Event;
 	import flash.events.InvokeEvent;
 	import flash.events.MouseEvent;
+	import flash.filesystem.File;
+	import flash.net.URLRequest;
 	
 	public class AirUtils
 	{
@@ -82,7 +85,6 @@ package org.openpyro.plugins.airHelpers.utils
 		 * and calls the undockListener an event when the icon in the dock is clicked on on either OS. 
 		 */ 
 		 public static function showInDockOrSystemTray(dockedIconBitmaps:Array, undockEventListener:Function, tooltip:String, menu:NativeMenu=null):void{
-		 	trace(arguments);
 		 	if(NativeApplication.supportsDockIcon){
 			    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
 			    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
@@ -90,8 +92,7 @@ package org.openpyro.plugins.airHelpers.utils
 			    	dockIcon.menu = menu;
 			    }
 			} else if (NativeApplication.supportsSystemTrayIcon){
-				trace("add to sys tray...")
-			    var sysTrayIcon:SystemTrayIcon =
+				var sysTrayIcon:SystemTrayIcon =
 			    NativeApplication.nativeApplication.icon as SystemTrayIcon;
 			    sysTrayIcon.tooltip = tooltip;
 			    sysTrayIcon.addEventListener(MouseEvent.CLICK,undockEventListener);
@@ -100,6 +101,32 @@ package org.openpyro.plugins.airHelpers.utils
 				 	sysTrayIcon.menu = menu;
 				}	
 			}	
+		}
+		
+		/**
+		 * Gets all the images from the ApplicationDescriptor in the icon tags
+		 * and calls the callback function passing an array of Loaders as the
+		 * only argument.
+		 */ 
+		public function getIconsFromAppDescriptor(callback:Function):void{
+			var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
+	 		var ns:Namespace = appDescriptor.namespace();
+	 		var icons:XMLList = appDescriptor.ns::icon.("*");
+	 		
+	 		var total:int = icons.length();
+	 		var loaders:Array = [];
+	 		for(var i:int=0; i<icons.length(); i++){
+	 			var iconPath:String = String(XML(icons[i]).children()[0])
+	 			var loader:Loader = new Loader();
+	 			loaders.push(loader);
+	 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, function(event:Event):void{
+	 				total-=1;
+	 				if(total == 0){
+	 					callback(loaders);
+	 				}
+	 			})
+	 			loader.load(new URLRequest(File.applicationDirectory.resolvePath(iconPath).nativePath));
+	 		}
 		}
 	}
 }
