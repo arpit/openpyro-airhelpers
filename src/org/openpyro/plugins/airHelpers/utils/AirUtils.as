@@ -64,8 +64,8 @@ package org.openpyro.plugins.airHelpers.utils
 		 		// else: this is a window close action
 		 		event.preventDefault();
 		 		win.visible=false;
-		 		showInDockOrSystemTray(dockedIconBitmaps, function(event:Event):void{}, win.title, menu);
 		 	});
+		 	showInDockOrSystemTray(dockedIconBitmaps, function(event:Event):void{}, win.title, menu);
 		 }
 		 
 		 /**
