@@ -3,6 +3,7 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.desktop.DockIcon;
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemTrayIcon;
+	import flash.display.BitmapData;
 	import flash.display.Loader;
 	import flash.display.NativeMenu;
 	import flash.display.NativeWindow;
@@ -35,8 +36,8 @@ package org.openpyro.plugins.airHelpers.utils
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
 		 public static function makeMinimizableOnClose(win:NativeWindow, 
-		 											 dockedIconBitmaps:Array, 
-		 											 undockEventListener:Function=null,  
+		 											 undockEventListener:Function=null,
+		 											 dockedIconBitmaps:Array=null, 
 		 											 menu:NativeMenu=null):void{
 		 	
 		 	var undockEventHandler:Function = function(event:Event):void{
@@ -75,30 +76,49 @@ package org.openpyro.plugins.airHelpers.utils
 		 		
 		 	});
 		 	
-		 	showInDockOrSystemTray(dockedIconBitmaps, function(event:Event):void{}, win.title, menu);
+		 	showInDockOrSystemTray(function(event:Event):void{}, win.title,dockedIconBitmaps,  menu);
 		 }
 		 
 		 /**
 		 * Shows one of the Bitmaps in the dockedIconBitmaps Array in the OS Dock or System Tray
 		 * and calls the undockListener an event when the icon in the dock is clicked on on either OS. 
 		 */ 
-		 public static function showInDockOrSystemTray(dockedIconBitmaps:Array, undockEventListener:Function, tooltip:String, menu:NativeMenu=null):void{
-		 	if(NativeApplication.supportsDockIcon){
-			    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
-			    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
-			    if(menu){
-			    	dockIcon.menu = menu;
-			    }
-			} else if (NativeApplication.supportsSystemTrayIcon){
-				var sysTrayIcon:SystemTrayIcon =
-			    NativeApplication.nativeApplication.icon as SystemTrayIcon;
-			    sysTrayIcon.tooltip = tooltip;
-			    sysTrayIcon.addEventListener(MouseEvent.CLICK,undockEventListener);
-			   	NativeApplication.nativeApplication.icon.bitmaps = dockedIconBitmaps;
-			   	if(menu != null){
-				 	sysTrayIcon.menu = menu;
+		 public static function showInDockOrSystemTray(undockEventListener:Function, tooltip:String="", dockedIconBitmaps:Array=null, menu:NativeMenu=null):void{
+		 	
+		 	var showInDockWithImages:Function = function(dockedIconBitmaps:Array):void{
+		 		if(NativeApplication.supportsDockIcon){
+				    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
+				    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
+				    if(menu){
+				    	dockIcon.menu = menu;
+				    }
+				} else if (NativeApplication.supportsSystemTrayIcon){
+					var sysTrayIcon:SystemTrayIcon =
+				    NativeApplication.nativeApplication.icon as SystemTrayIcon;
+				    sysTrayIcon.tooltip = tooltip;
+				    sysTrayIcon.addEventListener(MouseEvent.CLICK,undockEventListener);
+				   	NativeApplication.nativeApplication.icon.bitmaps = dockedIconBitmaps;
+				   	if(menu != null){
+					 	sysTrayIcon.menu = menu;
+					}	
 				}	
-			}	
+		 	}
+		 	
+		 	if(dockedIconBitmaps != null){
+		 		showInDockWithImages(dockedIconBitmaps);
+		 	}
+		 	else{
+		 		getIconsFromAppDescriptor(function(arr:Array):void{
+		 			var bmps:Array = [];
+		 			for(var i:int=0; i < arr.length; i++){
+		 				var loader:Loader = Loader(arr[i]);
+		 				var bitmap:BitmapData = new BitmapData(loader.content.width, loader.content.height, true, 0x00ff0000);
+		 				bitmap.draw(loader.content);
+		 				bmps.push(bitmap);
+		 			}
+		 			showInDockWithImages(bmps);
+		 		});
+		 	}
 		}
 		
 		/**
@@ -106,7 +126,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 * and calls the callback function passing an array of Loaders as the
 		 * only argument.
 		 */ 
-		public function getIconsFromAppDescriptor(callback:Function):void{
+		public static function getIconsFromAppDescriptor(callback:Function):void{
 			var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
 	 		var ns:Namespace = appDescriptor.namespace();
 	 		var icons:XMLList = appDescriptor.ns::icon.("*");
