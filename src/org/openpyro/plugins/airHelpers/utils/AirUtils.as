@@ -33,9 +33,13 @@ package org.openpyro.plugins.airHelpers.utils
 		 *  
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
-		 public static function makeMinimizableOnClose(win:NativeWindow, dockedIconBitmaps:Array, undockEventListener:Function=null,  menu:NativeMenu=null):void{
+		 public static function makeMinimizableOnClose(win:NativeWindow, 
+		 											 dockedIconBitmaps:Array, 
+		 											 undockEventListener:Function=null,  
+		 											 menu:NativeMenu=null):void{
 		 	
-		 	var undockELWrapper:Function = function(event:Event):void{
+		 	var undockEventHandler:Function = function(event:Event):void{
+		 		if(win.visible)return;
 		 		if(undockEventListener != null){
 		 			var showWindow:Boolean = undockEventListener(event);
 		 			if(!showWindow){
@@ -50,7 +54,10 @@ package org.openpyro.plugins.airHelpers.utils
 		 	
 		 	var na:NativeApplication = NativeApplication.nativeApplication;
 		 	na.autoExit = false;
-		 	na.addEventListener(InvokeEvent.INVOKE, undockELWrapper);
+		 	
+		 	//This event will be immediately fired at the moment the 
+		 	//EventListener is attached.
+		 	na.addEventListener(InvokeEvent.INVOKE, undockEventHandler);
 		 	na.addEventListener(Event.EXITING, function(event:Event):void{
 		 		isExiting = true;
 		 	})
@@ -64,7 +71,9 @@ package org.openpyro.plugins.airHelpers.utils
 		 		// else: this is a window close action
 		 		event.preventDefault();
 		 		win.visible=false;
+		 		
 		 	});
+		 	
 		 	showInDockOrSystemTray(dockedIconBitmaps, function(event:Event):void{}, win.title, menu);
 		 }
 		 
@@ -73,6 +82,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 * and calls the undockListener an event when the icon in the dock is clicked on on either OS. 
 		 */ 
 		 public static function showInDockOrSystemTray(dockedIconBitmaps:Array, undockEventListener:Function, tooltip:String, menu:NativeMenu=null):void{
+		 	trace(arguments);
 		 	if(NativeApplication.supportsDockIcon){
 			    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
 			    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
@@ -80,7 +90,7 @@ package org.openpyro.plugins.airHelpers.utils
 			    	dockIcon.menu = menu;
 			    }
 			} else if (NativeApplication.supportsSystemTrayIcon){
-				
+				trace("add to sys tray...")
 			    var sysTrayIcon:SystemTrayIcon =
 			    NativeApplication.nativeApplication.icon as SystemTrayIcon;
 			    sysTrayIcon.tooltip = tooltip;
