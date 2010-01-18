@@ -30,9 +30,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 * 
 		 * @param 	undockEventListener		Function to be invoked when the undock event happens. If that function
 		 * 									returns false, the window is not made visible
-		 * @param	menuGenerator			Function that returns a NativeMenu object that will be attached to 
-		 * 									the icon. This happens at the instant of the event so it can be dynamic
-		 * 									at different times.
+		 * @param	menu					NativeMenu to be shown on click of the docked icon
 		 *  
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
