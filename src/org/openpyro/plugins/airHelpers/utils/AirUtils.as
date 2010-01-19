@@ -38,7 +38,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 *  
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
-		 public static function makeMinimizableOnClose(win:NativeWindow, 
+		 public static function runInBackgroundOnClose(win:NativeWindow, 
 		 											 undockEventListener:Function=null,
 		 											 dockedIconBitmaps:Array=null, 
 		 											 menu:NativeMenu=null):void{
