@@ -13,8 +13,6 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.events.MouseEvent;
 	import flash.filesystem.File;
 	import flash.net.URLRequest;
-	import flash.system.ApplicationDomain;
-	import flash.system.LoaderContext;
 	
 	public class AirUtils
 	{
@@ -32,13 +30,15 @@ package org.openpyro.plugins.airHelpers.utils
 		 * (System tray for the PC / Dock for the Mac)as an icon. Also creates an EventListener to listen 
 		 * to the invoke/mouseclick event on the icon to make the window visible again. 
 		 * 
+		 * @param
 		 * @param 	undockEventListener		Function to be invoked when the undock event happens. If that function
 		 * 									returns false, the window is not made visible
 		 * @param	menu					NativeMenu to be shown on click of the docked icon
 		 *  
 		 * @see http://www.adobe.com/devnet/air/flash/quickstart/stopwatch_dock_system_tray.html
 		 */  
-		 public static function runInBackgroundOnClose(win:NativeWindow, 
+		 public static function runInBackgroundOnClose(win:NativeWindow,
+		 											 dockEventListener:Function = null, 
 		 											 undockEventListener:Function=null,
 		 											 dockedIconBitmaps:Array=null, 
 		 											 menu:NativeMenu=null):void{
@@ -74,6 +74,11 @@ package org.openpyro.plugins.airHelpers.utils
 		 			return;
 		 		}
 		 		// else: this is a window close action
+		 		if(dockEventListener != null){
+		 			if(dockEventListener(event) == false){
+		 				return;
+		 			}
+		 		}
 		 		event.preventDefault();
 		 		win.visible=false;
 		 		
