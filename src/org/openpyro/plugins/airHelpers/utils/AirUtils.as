@@ -8,6 +8,7 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.display.NativeMenu;
 	import flash.display.NativeWindow;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.InvokeEvent;
 	import flash.events.MouseEvent;
@@ -47,11 +48,12 @@ package org.openpyro.plugins.airHelpers.utils
 		 		if(win.visible)return;
 		 		if(undockEventListener != null){
 		 			var showWindow:Boolean = undockEventListener(event);
+		 		
 		 			if(!showWindow){
+		 				
 		 				return;
 		 			}
 		 		}
-		 		NativeApplication.nativeApplication.icon.bitmaps = [];
 		 		win.visible = true;	
 		 	};
 		 	
@@ -60,9 +62,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 	var na:NativeApplication = NativeApplication.nativeApplication;
 		 	na.autoExit = false;
 		 	
-		 	//This event will be immediately fired at the moment the 
-		 	//EventListener is attached.
-		 	na.addEventListener(InvokeEvent.INVOKE, undockEventHandler);
+		 	
 		 	na.addEventListener(Event.EXITING, function(event:Event):void{
 		 		isExiting = true;
 		 	})
@@ -84,19 +84,29 @@ package org.openpyro.plugins.airHelpers.utils
 		 		
 		 	});
 		 	
-		 	showInDockOrSystemTray(function(event:Event):void{}, win.title,dockedIconBitmaps,  menu);
+		 	var ed:EventDispatcher = showInDockOrSystemTray(win.title,dockedIconBitmaps,  menu);
+		 	ed.addEventListener(Event.OPEN, undockEventHandler);
 		 }
 		 
 		 /**
 		 * Shows one of the Bitmaps in the dockedIconBitmaps Array in the OS Dock or System Tray
 		 * and calls the undockListener an event when the icon in the dock is clicked on on either OS. 
 		 */ 
-		 public static function showInDockOrSystemTray(undockEventListener:Function, tooltip:String="", dockedIconBitmaps:Array=null, menu:NativeMenu=null):void{
+		 public static function showInDockOrSystemTray(tooltip:String="", 
+		 												dockedIconBitmaps:Array=null, 
+		 												menu:NativeMenu=null):EventDispatcher{
+		 	
+		 	var ed:EventDispatcher = new EventDispatcher();
 		 	
 		 	var showInDockWithImages:Function = function(dockedIconBitmaps:Array):void{
+		 		
 		 		if(NativeApplication.supportsDockIcon){
 				    var dockIcon:DockIcon = NativeApplication.nativeApplication.icon as DockIcon;
-				    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, undockEventListener);
+				    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, function(evt:InvokeEvent):void{
+				    	var openEvent:Event = new Event(Event.OPEN);
+				    	ed.dispatchEvent(openEvent);
+				    	
+				    });
 				    if(menu){
 				    	dockIcon.menu = menu;
 				    }
@@ -104,7 +114,11 @@ package org.openpyro.plugins.airHelpers.utils
 					var sysTrayIcon:SystemTrayIcon =
 				    NativeApplication.nativeApplication.icon as SystemTrayIcon;
 				    sysTrayIcon.tooltip = tooltip;
-				    sysTrayIcon.addEventListener(MouseEvent.CLICK,undockEventListener);
+				    sysTrayIcon.addEventListener(MouseEvent.CLICK,function(evt:MouseEvent):void{
+				    	var openEvent:Event = new Event(Event.OPEN);
+				    	ed.dispatchEvent(openEvent);
+				    	
+				    });
 				   	NativeApplication.nativeApplication.icon.bitmaps = dockedIconBitmaps;
 				   	if(menu != null){
 					 	sysTrayIcon.menu = menu;
@@ -127,6 +141,8 @@ package org.openpyro.plugins.airHelpers.utils
 		 			showInDockWithImages(bmps);
 		 		});
 		 	}
+		 	
+		 	return ed;
 		}
 		
 		/**
