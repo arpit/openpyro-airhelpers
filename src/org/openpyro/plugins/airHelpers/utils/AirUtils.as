@@ -15,6 +15,8 @@ package org.openpyro.plugins.airHelpers.utils
 	import flash.filesystem.File;
 	import flash.net.URLRequest;
 	
+	import org.openPyro.utils.ArrayUtil;
+	
 	public class AirUtils
 	{
 		/**
@@ -94,7 +96,7 @@ package org.openpyro.plugins.airHelpers.utils
 		 */ 
 		 public static function showInDockOrSystemTray(tooltip:String="", 
 		 												dockedIconBitmaps:Array=null, 
-		 												menu:NativeMenu=null):EventDispatcher{
+		 												menu:NativeMenu=null, onIconClick:Function=null):EventDispatcher{
 		 	
 		 	var ed:EventDispatcher = new EventDispatcher();
 		 	
@@ -105,6 +107,9 @@ package org.openpyro.plugins.airHelpers.utils
 				    NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, function(evt:InvokeEvent):void{
 				    	var openEvent:Event = new Event(Event.OPEN);
 				    	ed.dispatchEvent(openEvent);
+				    	if(onIconClick != null){
+				    		onIconClick();
+				    	}
 				    	
 				    });
 				    if(menu){
@@ -117,7 +122,9 @@ package org.openpyro.plugins.airHelpers.utils
 				    sysTrayIcon.addEventListener(MouseEvent.CLICK,function(evt:MouseEvent):void{
 				    	var openEvent:Event = new Event(Event.OPEN);
 				    	ed.dispatchEvent(openEvent);
-				    	
+				    	if(onIconClick != null){
+				    		onIconClick();
+				    	}
 				    });
 				   	NativeApplication.nativeApplication.icon.bitmaps = dockedIconBitmaps;
 				   	if(menu != null){
@@ -173,6 +180,25 @@ package org.openpyro.plugins.airHelpers.utils
 	 			})
 	 			loader.load(new URLRequest(File.applicationDirectory.resolvePath(iconPath).url));
 	 		}
+		}
+		
+		public static function isVersionGreater(originalVersion:String, newVersion:String):Boolean{
+			var origArray:Array = originalVersion.split(".");
+			var newVersionArray:Array = newVersion.split(".");
+			ArrayUtil.pad(origArray, Math.max(origArray.length, newVersionArray.length));
+			ArrayUtil.pad(newVersionArray,Math.max(origArray.length, newVersionArray.length));
+			
+			for(var i:int=0; i<origArray.length; i++){
+				if(newVersionArray[i] > origArray[i]){
+					return true;
+				}
+				if(newVersionArray[i] < origArray[i]){
+					return false;
+				}
+			}
+			
+			return false;
+			
 		}
 	}
 }
