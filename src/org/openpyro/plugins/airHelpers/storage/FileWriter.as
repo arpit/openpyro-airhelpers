@@ -10,6 +10,13 @@ package org.openpyro.plugins.airHelpers.storage
 		{
 		}
 		
+		public static function writeFile(f:File, d:String):void{
+			var fw:FileWriter = new FileWriter();
+			fw.file = f;
+			fw.data = d;
+			fw.write();
+		}
+		
 		private var _file:File;
 		public function set file(f:File):void{
 			_file = f;

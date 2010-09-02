@@ -182,22 +182,30 @@ package org.openpyro.plugins.airHelpers.utils
 	 		}
 		}
 		
-		public static function isVersionGreater(originalVersion:String, newVersion:String):Boolean{
-			var origArray:Array = originalVersion.split(".");
-			var newVersionArray:Array = newVersion.split(".");
-			ArrayUtil.pad(origArray, Math.max(origArray.length, newVersionArray.length));
-			ArrayUtil.pad(newVersionArray,Math.max(origArray.length, newVersionArray.length));
+		
+		/**
+		 * Returns:
+		 * 
+		 * 1 if v1 > v2;
+		 * 0 if v1 = v2;
+		 * -1 if v1 < v2;
+		 */ 
+		public static function isVersionGreater(version1:String, version2:String):int{
+			var origArray:Array = version1.split(".");
+			var version2Array:Array = version2.split(".");
+			ArrayUtil.pad(origArray, Math.max(origArray.length, version2Array.length));
+			ArrayUtil.pad(version2Array,Math.max(origArray.length, version2Array.length));
 			
 			for(var i:int=0; i<origArray.length; i++){
-				if(newVersionArray[i] > origArray[i]){
-					return true;
+				if(version2Array[i] > origArray[i]){
+					return 1;
 				}
-				if(newVersionArray[i] < origArray[i]){
-					return false;
+				if(version2Array[i] < origArray[i]){
+					return -1;
 				}
 			}
 			
-			return false;
+			return 0;
 			
 		}
 	}
