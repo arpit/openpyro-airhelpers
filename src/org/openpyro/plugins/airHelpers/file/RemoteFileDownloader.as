@@ -16,6 +16,13 @@ package org.openpyro.plugins.airHelpers.file
 	*/
 	[Event(name="downloadError", type="org.openpyro.plugins.airHelpers.file.RemoteFileDownloadErrorEvent")]
 	
+	
+	/**
+	 * Dispatched on download progress
+	 */
+	
+	[Event(name="progress", type="flash.events.ProgressEvent")]
+	
 	/**
 	* 	Dispatched once the download is complete
 	*/
@@ -31,13 +38,15 @@ package org.openpyro.plugins.airHelpers.file
 		
 		private var fileStream:FileStream
 		private var urlStream:URLStream
+		private var _downloadURL:String;
+		
 		
 		public function RemoteFileDownloader()
 		{
 		}
 		
 		public function download(url:String, file:File):void{
-			
+			_downloadURL = url;
 			fileURLRequest = new URLRequest(url);
 			fileURLRequest.useCache = false;
 			_downloadedFile = file
@@ -49,6 +58,7 @@ package org.openpyro.plugins.airHelpers.file
 			urlStream.load(fileURLRequest);
 			
 		}
+		
 		
 		private function onIOError(event:Event):void{
 			dispatchEvent(new RemoteFileDownloadErrorEvent(event));
@@ -106,6 +116,16 @@ package org.openpyro.plugins.airHelpers.file
 		
 		public function get downloadedFile():File{
 			return _downloadedFile;	
+		}
+		
+		public function get downloadURL():String{
+			return _downloadURL;
+		}
+		
+		public function abort():void{
+			if(urlStream && urlStream.connected){
+				urlStream.close();
+			}
 		}
 		
 	}
